@@ -1,0 +1,12 @@
+/* Global Styles */
+body {
+  margin: 0;
+  padding: 0;
+  /* keep content below fixed navbar (64px height) */
+  padding-top: 2%;
+  font-family: Arial, sans-serif;
+}
+
+html, body {
+  height: 100%;
+}

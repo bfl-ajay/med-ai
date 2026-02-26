@@ -1,0 +1,385 @@
+/* ===== Background (Match Login) ===== */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f5f1ea, #efe7dc);
+  padding: 40px 20px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ===== Card ===== */
+.auth-card {
+  width: 650px;
+  max-width: 100%;
+  background: #ffffff;
+  padding: 40px 40px;
+  border-radius: 18px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Header ===== */
+.auth-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.auth-header h2 {
+  font-weight: 600;
+  color: #2F2A25;
+  margin-bottom: 8px;
+}
+
+.auth-header p {
+  font-size: 14px;
+  color: #6E655C;
+}
+
+/* ===== Form Layout ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 30px;
+}
+
+.full {
+  grid-column: span 2;
+  margin-top: 8px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 20px;
+  /* space between label and input */
+}
+
+/* ===== Labels ===== */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #6E655C;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Inputs ===== */
+input,
+select {
+  /* width: 90%; */
+  padding: 13px 8px;
+  border-radius: 10px;
+  border: 1px solid #E8E2D8;
+  font-size: 14px;
+  background: #ffffff;
+  transition: 0.25s;
+}
+
+input:focus,
+select:focus {
+  border-color: #CBB395;
+  box-shadow: 0 0 0 3px rgba(203, 179, 149, 0.2);
+  outline: none;
+}
+
+/* ===== Tag Input ===== */
+.tag-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid #E8E2D8;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: text;
+}
+
+/* Make entire box focus highlight */
+.tag-box:focus-within {
+  border-color: #CBB395;
+  box-shadow: 0 0 0 3px rgba(203,179,149,0.2);
+}
+
+/* ===== Tags Above Input ===== */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Tag Style */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  background: linear-gradient(135deg, #d8c3a5, #cbb395);
+  color: rgb(0, 0, 0);
+
+  padding: 6px 12px;
+  border-radius: 20px;
+
+  font-size: 13px;
+}
+
+.tag span {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Input Box */
+.input-wrapper input {
+  width: 97%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #E8E2D8;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.input-wrapper input:focus {
+  border-color: #CBB395;
+  box-shadow: 0 0 0 3px rgba(203,179,149,0.2);
+  outline: none;
+}
+
+/* ===== Button ===== */
+.submit-btn {
+  width: 30%;
+  margin-top: 25px;
+  margin-bottom: 29px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #d8c3a5, #cbb395);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Switch link ===== */
+.switch-link {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.switch-link a {
+  color: #A88F70;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.switch-link a:hover {
+  text-decoration: underline;
+}
+
+/* Suggestions dropdown */
+.suggestions {
+  margin-top: 8px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #E8E2D8;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  max-height: 180px;
+  overflow-y: auto;
+  animation: fadeIn 0.15s ease-in-out;
+}
+
+.suggestion-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.suggestion-item:hover {
+  background: #f6f3ee;
+}
+
+/* Smooth appearance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= MOBILE OPTIMIZATION ================= */
+@media (max-width: 768px) {
+
+  .auth-container {
+    padding: 20px 15px;
+    align-items: flex-start;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 30px 20px;
+    border-radius: 16px;
+  }
+
+  .auth-header {
+    margin-bottom: 25px;
+  }
+
+  .auth-header h2 {
+    font-size: 20px;
+  }
+
+  .auth-header p {
+    font-size: 13px;
+  }
+
+  /* Single column layout */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .full {
+    grid-column: span 1;
+    margin-top: 0;
+  }
+
+  .form-group {
+    gap: 5px;
+  }
+
+  label {
+    font-size: 11px;
+  }
+
+  input,
+  select {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  /* Tag box tighter */
+  .tag-box {
+    padding: 8px;
+  }
+
+  .tag {
+    font-size: 12px;
+    padding: 5px 8px;
+  }
+
+  /* Suggestions dropdown */
+  .suggestions {
+    max-height: 150px;
+  }
+
+  .suggestion-item {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .submit-btn {
+    margin-top: 25px;
+    padding: 13px;
+  }
+
+  .switch-link {
+    font-size: 13px;
+    margin-top: 15px;
+  }
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.step-indicator div {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #E8E2D8;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6E655C;
+}
+
+.step-indicator .active {
+  background: linear-gradient(135deg, #d8c3a5, #cbb395);
+  color: white;
+}
+
+.step-buttons {
+  display: flex;
+  justify-content: space-between;
+  /* margin-top: 20px; */
+}
+
+.back-btn {
+  width: 30%;
+  margin-top: 25px;
+  margin-bottom: 29px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  /* background: linear-gradient(135deg, #d8c3a5, #cbb395); */
+  color: #000000;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* ===== Validation Errors ===== */
+.error {
+  color: #e53935;
+  /* Strong red */
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Red border for invalid fields */
+input.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched {
+  border-color: #e53935 !important;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.15);
+}
+
+/* Optional: smooth transition */
+input,
+select {
+  transition: 0.2s ease;
+}
+
+/* Disabled button style */
+.disabled-btn {
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+/* Ensure hover doesn't look clickable */
+button:disabled {
+  cursor: not-allowed !important;
+  pointer-events: auto;
+  /* important */
+}

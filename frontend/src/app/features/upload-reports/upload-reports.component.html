@@ -1,0 +1,73 @@
+<div class="page-container">
+
+  <div class="page-card">
+    <h2>Upload Medical Report</h2>
+
+    <!-- DRAG & DROP AREA -->
+    <label class="file-upload" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+
+      <input type="file" (change)="onFileSelected($event)" accept=".pdf,.jpg,.jpeg,.png">
+
+      <p *ngIf="!selectedFile">Click or drag file to upload</p>
+      <p *ngIf="selectedFile" class="file-name">
+        {{ selectedFile.name }}
+      </p>
+
+    </label>
+
+    <!-- STATUS -->
+    <p *ngIf="uploading" class="status uploading">Uploading...</p>
+    <p *ngIf="uploadSuccess" class="status success">Upload successful</p>
+
+    <button class="submit-btn" (click)="upload()" [disabled]="!selectedFile || uploading">
+      Upload Report
+    </button>
+  </div>
+
+  <!-- REPORT LIST -->
+  <div class="page-card" *ngIf="reports.length > 0">
+    <h3>Your Uploaded Reports</h3>
+
+    <div class="report-list">
+      <div *ngFor="let r of reports" class="report-item">
+
+        <!-- HEADER ROW -->
+        <div class="report-header">
+          <div class="report-info">
+            <a [href]="'http://localhost:5000/uploads/reports/' + r.file_path" target="_blank">
+              {{ r.file_name }}
+            </a>
+
+            <span class="date">
+              {{ r.uploaded_at | date:'medium' }}
+            </span>
+          </div>
+
+          <div class="action-buttons">
+            <button class="analyze-btn" (click)="analyzeReport(r.id)">
+              {{ reportAnalysisMap[r.id] ? 'Hide' : 'Analyze' }}
+            </button>
+
+            <button class="delete-btn" (click)="deleteReport(r.id)">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- ANALYSIS BELOW -->
+        <div *ngIf="reportAnalysisMap[r.id]" class="analysis-box">
+
+          <h4>Extracted Text</h4>
+
+          <pre class="ocr-text">
+{{ reportAnalysisMap[r.id].extractedText }}
+    </pre>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,174 @@
+<div class="auth-container">
+    <div class="auth-card">
+
+        <div class="auth-header">
+            <h2>Create Account</h2>
+            <p>Start your digital health journey</p>
+        </div>
+
+        <form #formRef="ngForm" (ngSubmit)="handleSubmit(formRef)">
+
+            <!-- STEP INDICATOR -->
+            <div class="step-indicator">
+                <div [class.active]="currentStep === 1">Step 1</div>
+                <div [class.active]="currentStep === 2">Step 2</div>
+            </div>
+
+            <!-- ================= STEP 1 ================= -->
+            <div *ngIf="currentStep === 1">
+
+                <div class="form-grid">
+
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" [(ngModel)]="name" name="name" required minlength="3" #nameRef="ngModel">
+                        <div class="error" *ngIf="nameRef.invalid && nameRef.touched">
+                            Name must be at least 3 characters
+                        </div>
+                    </div>
+
+                    <!-- DOB -->
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" [(ngModel)]="dob" name="dob" required #dobRef="ngModel">
+                        <div class="error" *ngIf="dobRef.invalid && dobRef.touched">
+                            Date of birth is required
+                        </div>
+                    </div>
+
+                    <!-- Mobile -->
+                    <div class="form-group">
+                        <label>Mobile</label>
+                        <input type="tel" [(ngModel)]="mobile_no" name="mobile_no" required pattern="^[0-9]{10}$"
+                            #mobileRef="ngModel">
+                        <div class="error" *ngIf="mobileRef.invalid && mobileRef.touched">
+                            Enter valid 10-digit mobile number
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select [(ngModel)]="gender" name="gender" required #genderRef="ngModel">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <div class="error" *ngIf="genderRef.invalid && genderRef.touched">
+                            Gender is required
+                        </div>
+                    </div>
+
+                    <!-- Height -->
+                    <div class="form-group">
+                        <label>Height (cm)</label>
+                        <input type="number" [(ngModel)]="height" name="height" required min="50" #heightRef="ngModel">
+                        <div class="error" *ngIf="heightRef.invalid && heightRef.touched">
+                            Enter valid height
+                        </div>
+                    </div>
+
+                    <!-- Weight -->
+                    <div class="form-group">
+                        <label>Weight (kg)</label>
+                        <input type="number" [(ngModel)]="weight" name="weight" required min="10" #weightRef="ngModel">
+                        <div class="error" *ngIf="weightRef.invalid && weightRef.touched">
+                            Enter valid weight
+                        </div>
+                    </div>
+
+                    <!-- Blood Group -->
+                    <div class="form-group full">
+                        <label>Blood Group</label>
+                        <select [(ngModel)]="bloodGroup" name="bloodGroup" required #bloodRef="ngModel">
+                            <option value="">Select</option>
+                            <option *ngFor="let bg of bloodGroups" [value]="bg">
+                                {{bg}}
+                            </option>
+                        </select>
+                        <div class="error" *ngIf="bloodRef.invalid && bloodRef.touched">
+                            Blood group is required
+                        </div>
+                    </div>
+                    <!-- Known Diseases -->
+                    <div class="form-group full">
+                        <label>Known Diseases</label>
+
+                        <!-- TAGS ABOVE -->
+                        <div class="tags-container" *ngIf="knownDiseases.length > 0">
+                            <div class="tag" *ngFor="let d of knownDiseases; let i = index">
+                                {{ d }}
+                                <span (click)="removeDisease(i)">×</span>
+                            </div>
+                        </div>
+
+                        <!-- INPUT BELOW -->
+                        <div class="input-wrapper">
+                            <input type="text" placeholder="Type disease..." [(ngModel)]="diseaseInput"
+                                name="diseaseInput" (input)="onDiseaseInput()" (keydown.enter)="addDisease($event)">
+                        </div>
+
+                        <!-- Suggestions -->
+                        <div class="suggestions" *ngIf="filteredDiseases.length > 0">
+                            <div class="suggestion-item" *ngFor="let s of filteredDiseases" (click)="selectDisease(s)">
+                                {{ s }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" [disabled]="!isStep1Valid()"
+                    [class.disabled-btn]="!isStep1Valid()">
+                    Continue →
+                </button>
+
+            </div>
+
+            <!-- ================= STEP 2 ================= -->
+            <div *ngIf="currentStep === 2">
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" [(ngModel)]="email" name="email" required email #emailRef="ngModel">
+                    <div class="error" *ngIf="emailRef.invalid && emailRef.touched">
+                        Enter valid email
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" [(ngModel)]="password" name="password" required minlength="6"
+                        #passwordRef="ngModel">
+                    <div class="error" *ngIf="passwordRef.invalid && passwordRef.touched">
+                        Minimum 6 characters required
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Re-enter Password</label>
+                    <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required
+                        #confirmRef="ngModel">
+                    <div class="error" *ngIf="confirmPassword !== password && confirmRef.touched">
+                        Passwords do not match
+                    </div>
+                </div>
+
+                <div class="step-buttons">
+                    <button type="button" class="back-btn" (click)="prevStep()">
+                        ← Back
+                    </button>
+
+                    <button type="submit" class="submit-btn" [disabled]="!isStep2Valid()"
+                        [class.disabled-btn]="!isStep2Valid()">
+                        Create Account
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</div>

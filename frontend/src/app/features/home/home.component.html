@@ -1,0 +1,170 @@
+<!-- ================= HERO ================= -->
+<div class="home-wrapper">
+  <div class="content">
+    <div class="home-hero">
+
+      <div class="home-card hero-left">
+        <h1 class="home-title">Health Adviser</h1>
+
+        <p class="home-sub">
+          Your intelligent digital health companion designed to help you manage prescriptions,
+          track blood pressure trends, receive AI-powered wellness plans,
+          and take control of your long-term health with confidence.
+        </p>
+
+        <div class="home-actions">
+          <button class="btn btn-primary" routerLink="/register">
+            Create Free Account
+          </button>
+          <button class="btn btn-outline">
+            Explore Features
+          </button>
+        </div>
+
+        <p class="trust-line">
+          ✓ Secure & Private &nbsp; ✓ AI-Powered Insights &nbsp; ✓ Easy to Use
+        </p>
+      </div>
+
+      <div>
+        <img src="assets/hero-illustration.png" alt="Digital Health Monitoring" class="hero-img" />
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= STATS ================= -->
+<section class="stats-section">
+  <div class="stats-container">
+
+    <h2 class="stats-heading">
+      Trusted by Health-Conscious Individuals
+    </h2>
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <h3>5,000+</h3>
+        <p>Active Users</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>12,000+</h3>
+        <p>Prescriptions Managed</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>98%</h3>
+        <p>User Satisfaction</p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="site-section features-section">
+  <div class="section-inner">
+
+    <h2 class="section-title">Core Features</h2>
+
+    <div class="carousel-wrapper">
+
+      <!-- Left Arrow -->
+      <button class="carousel-btn left" (click)="scrollLeft()">‹</button>
+
+      <!-- Slider -->
+      <div class="carousel-track" #carousel>
+
+        <div class="feature-card">
+          <h3>Chat. Scribe.</h3>
+          <h5>Conversation & Documentation Mode</h5>
+          <p>
+            Discuss symptoms, upload photos, receive AI treatment plans
+            or connect with doctors. In Scribe mode,
+            AI transcribes consultations and generates structured notes.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>For Medical Professionals</h3>
+          <h5>Boost Efficiency & Accuracy</h5>
+          <p>
+            AI listens during consultations and generates
+            clinical notes, ICD-10 codes,
+            treatment suggestions and editable documents.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>AI Validated by Doctors</h3>
+          <h5>Machine Learning Meets Medicine</h5>
+          <p>
+            Fine-tuned medical LLMs validated by professionals
+            to ensure reliable treatment plans and recommendations.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Access for Everyone</h3>
+          <h5>Start with Our Free Plan</h5>
+          <p>
+            Get ten free questions per month.
+            Upgrade anytime for additional questions
+            or unlimited access.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Right Arrow -->
+      <button class="carousel-btn right" (click)="scrollRight()">›</button>
+
+    </div>
+
+    <!-- Pagination Dots -->
+    <div class="carousel-dots">
+      <span *ngFor="let dot of [1,2,3,4]; let i = index"
+            [class.active]="i === activeIndex"
+            (click)="goToSlide(i)">
+      </span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section class="site-section">
+  <div class="section-inner">
+    <div class="section-card">
+      <h2>Contact Us</h2>
+      <form class="contact-form" (ngSubmit)="submitContact()">
+        <label>
+          Name
+          <input type="text" [(ngModel)]="name" name="name" required>
+        </label>
+
+        <label>
+          Email
+          <input type="email" [(ngModel)]="email" name="email" required>
+        </label>
+
+        <label>
+          Message
+          <textarea [(ngModel)]="message" name="message" required></textarea>
+        </label>
+
+        <button type="submit" class="btn btn-primary">
+          Send Message
+        </button>
+
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Health Adviser. All rights reserved.
+</footer>

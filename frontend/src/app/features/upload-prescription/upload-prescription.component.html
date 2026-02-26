@@ -1,0 +1,87 @@
+<div class="page-container">
+
+  <!-- ================= UPLOAD CARD ================= -->
+  <div class="page-card">
+    <h2>Upload Prescription</h2>
+
+    <!-- Doctor Name -->
+    <div class="form-group">
+      <label>Doctor Name</label>
+      <input type="text" [(ngModel)]="doctorName" placeholder="Dr. Sharma">
+    </div>
+
+    <!-- Optional Notes -->
+    <div class="form-group">
+      <label>Notes (Optional)</label>
+      <textarea rows="4" [(ngModel)]="prescriptionText" placeholder="Add any details about this prescription...">
+      </textarea>
+    </div>
+
+    <!-- FILE UPLOAD AREA -->
+    <label class="file-upload" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+
+      <input type="file" (change)="onFileSelected($event)" accept=".pdf,.jpg,.jpeg,.png">
+
+      <p *ngIf="!selectedFile">Click or drag prescription file</p>
+      <p *ngIf="selectedFile" class="file-name">
+        {{ selectedFile.name }}
+      </p>
+
+    </label>
+
+    <button class="submit-btn" (click)="submit()" [disabled]="!selectedFile">
+      Upload Prescription
+    </button>
+  </div>
+
+  <!-- ================= PRESCRIPTION LIST ================= -->
+  <div class="page-card" *ngIf="prescriptions.length > 0">
+    <h3>Your Prescriptions</h3>
+
+    <div class="report-list">
+      <div *ngFor="let p of prescriptions" class="report-item">
+
+        <div class="report-info">
+          <a [href]="'http://localhost:5000/uploads/prescriptions/' + p.file_path" target="_blank">
+            {{ p.file_name }}
+          </a>
+
+          <span class="meta">
+            Doctor: {{ p.doctor_name || 'Not specified' }}
+          </span>
+
+          <span class="date">
+            {{ p.uploaded_at | date:'medium' }}
+          </span>
+        </div>
+
+        <div class="action-buttons">
+          <button class="analyze-btn" (click)="analyzePrescription(p.id)">
+            {{ analysisMap[p.id] ? 'Hide' : 'Analyze' }}
+          </button>
+
+          <button class="delete-btn" (click)="deletePrescription(p.id)">
+            Delete
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loadingId === p.id" class="analysis-loading">
+          Analyzing prescription...
+        </div>
+
+        <!-- Extracted Text -->
+        <div *ngIf="analysisMap[p.id]" class="analysis-box">
+          <h4>Extracted Text</h4>
+
+          <pre class="ocr-text">
+{{ analysisMap[p.id].extractedText }}
+        </pre>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+</div>

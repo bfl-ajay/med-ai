@@ -1,0 +1,28 @@
+# Ignore comments - lines starting with # are ignored
+
+# Ignore common OS-specific files
+.DS_Store # Mac specific file
+Thumbs.db # Windows specific file
+
+# Ignore common build/log/temp files and directories
+build/
+dist/
+temp/
+*.log
+*.tmp
+*.cache
+
+# Ignore environment files
+.env
+.venv/ # commonly ignored for Python virtual environments
+
+# Ignore dependencies directory (common in Node.js projects)
+node_modules/
+
+# Ignore specific file types
+*.exe
+*.out
+*.dll
+
+# Exclude a specific file from a general ignore pattern (if needed)
+# !/my/specific/file.txt

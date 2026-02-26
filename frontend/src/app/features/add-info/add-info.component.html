@@ -1,0 +1,22 @@
+<div class="page-container">
+  <div class="page-card">
+    <h2>Add Additional Health Info</h2>
+
+    <div class="form-group">
+      <label>Emergency Contact</label>
+      <input type="text" [(ngModel)]="emergencyContact">
+    </div>
+
+    <div class="form-group">
+      <label>Allergies</label>
+      <input type="text" [(ngModel)]="allergies">
+    </div>
+
+    <div class="form-group">
+      <label>Additional Notes</label>
+      <textarea rows="4" [(ngModel)]="notes"></textarea>
+    </div>
+
+    <button class="save-btn" (click)="save()">Save Info</button>
+  </div>
+</div>

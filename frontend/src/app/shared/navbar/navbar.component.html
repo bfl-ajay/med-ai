@@ -1,0 +1,75 @@
+<nav class="navbar">
+  <div class="nav-inner">
+
+    <!-- BRAND -->
+    <a [routerLink]="isLoggedIn() ? '/dashboard' : '/'" class="brand" (click)="closeMenu()">
+      {{ isLoggedIn() ? 'Dashboard' : 'Health Adviser' }}
+    </a>
+
+    <!-- HAMBURGER -->
+    <button class="hamburger" aria-label="Toggle navigation" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <!-- NAV LINKS -->
+    <ul class="nav-links" [class.open]="menuOpen">
+
+      <!-- NOT LOGGED IN -->
+      <ng-container *ngIf="!isLoggedIn(); else loggedInNav">
+
+        <li><a (click)="navigateToSection('home')">Home</a></li>
+        <li><a (click)="navigateToSection('about')">About</a></li>
+        <li><a (click)="navigateToSection('vision')">Vision</a></li>
+        <li><a (click)="navigateToSection('why')">Why</a></li>
+        <li><a (click)="navigateToSection('how')">How</a></li>
+        <li><a (click)="navigateToSection('contact')">Contact</a></li>
+
+        <li>
+          <a routerLink="/login" class="btn btn-primary" (click)="closeMenu()">
+            Login
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/register" class="btn btn-outline" (click)="closeMenu()">
+            Register
+          </a>
+        </li>
+
+      </ng-container>
+
+      <!-- LOGGED IN -->
+      <ng-template #loggedInNav>
+
+        <li>
+          <a routerLink="/upload-reports" (click)="closeMenu()">
+            Upload Reports
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/upload-prescription" (click)="closeMenu()">
+            Upload Prescription
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/add-info" (click)="closeMenu()">
+            Add Info
+          </a>
+        </li>
+
+        <li>
+          <button class="btn btn-logout" (click)="logout(); closeMenu()">
+            Logout
+          </button>
+        </li>
+
+      </ng-template>
+
+    </ul>
+
+  </div>
+</nav>

@@ -1,0 +1,226 @@
+/* ---------- PAGE LAYOUT ---------- */
+
+.page-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.page-card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid #eee9e1;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.04);
+  margin-bottom: 30px;
+}
+
+/* ---------- FORM ---------- */
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #2c2c2c;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #eee9e1;
+  font-size: 0.9rem;
+  transition: 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #c7a674;
+  box-shadow: 0 0 0 3px rgba(199,166,116,0.15);
+}
+
+/* ---------- FILE UPLOAD ---------- */
+
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  border: 2px dashed #c7a674;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+  text-align: center;
+  background: #faf8f4;
+  margin-top: 10px;
+}
+
+.file-upload:hover {
+  background: #f4f0ea;
+}
+
+.file-upload input {
+  display: none;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #a57c43;
+}
+
+/* ---------- BUTTONS ---------- */
+
+.submit-btn {
+  margin-top: 20px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: none;
+  background: #c7a674;
+  color: black;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  background: #a57c43;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delete-btn {
+  background: #d9534f;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: black;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #c9302c;
+}
+
+.analyze-btn {
+  background: #4caf50;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: black;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.analyze-btn:hover {
+  background: #43a047;
+}
+
+/* ---------- LIST CARDS (REPORTS + PRESCRIPTIONS) ---------- */
+
+.report-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.report-item {
+  display: flex;
+  flex-direction: column;   /* 👈 identical stacked layout */
+  background: #faf8f4;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid #eee9e1;
+  transition: 0.2s ease;
+}
+
+.report-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Header row */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* File Info */
+
+.report-info a {
+  font-weight: 600;
+  color: #2c2c2c;
+  text-decoration: none;
+}
+
+.report-info a:hover {
+  text-decoration: underline;
+}
+
+.meta {
+  display: block;
+  font-size: 0.85rem;
+  color: #6d6d6d;
+  margin-top: 4px;
+}
+
+.date {
+  display: block;
+  font-size: 0.8rem;
+  color: #8c8c8c;
+  margin-top: 2px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------- ANALYSIS SECTION ---------- */
+
+.analysis-box {
+  margin-top: 15px;
+  padding: 15px;
+  background: #eee9e1;
+  border-radius: 8px;
+}
+
+.ocr-text {
+  white-space: pre-wrap;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.analysis-section p {
+  margin-bottom: 8px;
+}
+
+.low {
+  color: green;
+  font-weight: bold;
+}
+
+.moderate {
+  color: orange;
+  font-weight: bold;
+}
+
+.high {
+  color: red;
+  font-weight: bold;
+}

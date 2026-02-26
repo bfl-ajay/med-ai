@@ -1,0 +1,299 @@
+<div class="container bp-card" *ngIf="profile">
+
+  <!-- PROFILE CARD -->
+  <div class="card">
+    <h2>Welcome {{ profile.name }}</h2>
+
+    <p><strong>Age:</strong> {{ profile.age }}</p>
+    <p><strong>BMI:</strong> {{ profile.bmi | number:'1.1-2' }}</p>
+    <p><strong>Lifestyle:</strong> {{ profile.lifestyle }}</p>
+    <p><strong>Blood Group:</strong> {{ profile.bloodGroup }}</p>
+
+    <h4>Known Diseases</h4>
+    <ul *ngIf="profile.knownDiseases?.length > 0; else noDiseases">
+      <li *ngFor="let disease of profile.knownDiseases">
+        {{ disease }}
+      </li>
+    </ul>
+
+    <ng-template #noDiseases>
+      <p>No known diseases</p>
+    </ng-template>
+  </div>
+
+  <!-- ADDITIONAL INFO -->
+  <div class="card" *ngIf="additionalInfos?.length > 0">
+    <h3>Additional Information</h3>
+
+    <div *ngFor="let info of additionalInfos">
+      <p><strong>Emergency Contact:</strong> {{ info.emergency_contact }}</p>
+      <p><strong>Allergies:</strong> {{ info.allergies }}</p>
+      <p><strong>Notes:</strong> {{ info.medical_notes }}</p>
+      <hr>
+    </div>
+  </div>
+
+  <!-- Daily Blood Pressure -->
+  <div class="card">
+    <h3>🩺 Blood Pressure Tracker</h3>
+
+    <!-- ADD BP SECTION -->
+    <div class="bp-add-section">
+
+      <div class="bp-add-input-row">
+        <input type="number" placeholder="Systolic" [(ngModel)]="systolic" />
+
+        <input type="number" placeholder="Diastolic" [(ngModel)]="diastolic" />
+
+        <input type="number" placeholder="Pulse" [(ngModel)]="pulse" />
+
+        <button class="add-bp-btn" (click)="addBP()">
+          Add
+        </button>
+      </div>
+
+    </div>
+
+    <!-- CURRENT WEEK -->
+    <div *ngIf="currentBP.length > 0">
+      <h4>Current Week</h4>
+      <table class="bp-table">
+        <tr>
+          <th>Metric</th>
+          <th *ngFor="let bp of currentBP">
+            {{ bp.recorded_at | date:'shortDate' }}
+          </th>
+        </tr>
+        <tr>
+          <td><strong>Systolic</strong></td>
+          <td *ngFor="let bp of currentBP" [ngClass]="getBPClass(bp.systolic, bp.diastolic)">
+            {{ bp.systolic }}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Diastolic</strong></td>
+          <td *ngFor="let bp of currentBP" [ngClass]="getBPClass(bp.systolic, bp.diastolic)">
+            {{ bp.diastolic }}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Pulse</strong></td>
+          <td *ngFor="let bp of currentBP">
+            {{ bp.pulse || '-' }}
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div *ngIf="getLatestBP()" class="latest-bp-display">
+
+      <div class="latest-bp-card" [ngClass]="getBPClass(getLatestBP().systolic, getLatestBP().diastolic)">
+
+        <div class="latest-title">
+          Latest Reading
+        </div>
+
+        <div class="latest-values">
+          {{ getLatestBP().systolic }}/{{ getLatestBP().diastolic }}
+          <span class="pulse-label">
+            • Pulse {{ getLatestBP().pulse || '-' }}
+          </span>
+        </div>
+
+        <div class="latest-date">
+          {{ getLatestBP().recorded_at | date:'medium' }}
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PREVIOUS HISTORY -->
+    <div *ngIf="previousBP.length > 0">
+      <h4 style="margin-top: 30px;">Previous History</h4>
+
+      <div *ngFor="let week of previousBP" class="week-section">
+        <div class="week-header" (click)="week.expanded = !week.expanded">
+
+          📅 Week of {{ week.weekStart }}
+
+          <span>
+            {{ week.expanded ? '▲' : '▼' }}
+          </span>
+        </div>
+
+        <div *ngIf="week.expanded">
+          <table class="bp-table">
+            <tr>
+              <th>Metric</th>
+              <th *ngFor="let bp of week.records">
+                {{ bp.recorded_at | date:'shortDate' }}
+              </th>
+            </tr>
+            <tr>
+              <td><strong>Systolic</strong></td>
+              <td *ngFor="let bp of week.records">
+                {{ bp.systolic }}
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Diastolic</strong></td>
+              <td *ngFor="let bp of week.records">
+                {{ bp.diastolic }}
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Pulse</strong></td>
+              <td *ngFor="let bp of week.records">
+                {{ bp.pulse || '-' }}
+              </td>
+            </tr>
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEALTH SCORE -->
+  <div class="card">
+    <h3>Health Score</h3>
+    <div class="progress">
+      <div class="progress-bar" [style.width.%]="profile.healthScore" [ngStyle]="{
+          'background-color': profile.healthScore >= 80 ? '#4caf50' :
+                              profile.healthScore >= 60 ? '#ffc107' :
+                              '#f44336'
+        }">
+        {{ profile.healthScore }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- AI PLAN -->
+  <div class="card">
+    <h3>AI Diet & Workout Plan</h3>
+    <button (click)="getPlan()">Generate Plan</button>
+    <div *ngIf="aiPlan" class="ai-output-grid">
+      <!-- MEAL PLAN -->
+      <div class="plan-card">
+        <h4>Meal Plan</h4>
+        <ul>
+          <li *ngFor="let meal of aiPlan.mealPlan">
+            <strong>{{ meal.title }}</strong>
+            <br>
+            ⏱ {{ meal.readyInMinutes }} mins
+            <br>
+            <a [href]="meal.sourceUrl" target="_blank">View Recipe</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- FOODS TO AVOID -->
+      <div class="plan-card" *ngIf="aiPlan.avoidFoods?.length">
+        <h4>Foods to Avoid</h4>
+        <ul>
+          <li *ngFor="let item of aiPlan.avoidFoods">
+            {{ item }}
+          </li>
+        </ul>
+      </div>
+      <div class="plan-card">
+        <h4>Workout Plan</h4>
+        <div *ngFor="let exercise of aiPlan?.workoutPlan" class="exercise-item">
+          <strong>{{ exercise?.name }}</strong>
+          <div [innerHTML]="exercise.description"></div>
+        </div>
+      </div>
+
+      <!-- HEALTH INSIGHTS -->
+      <div class="plan-card">
+        <h4>Health Insights</h4>
+        <ul>
+          <li *ngFor="let insight of aiPlan.healthInsights">
+            {{ insight }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- REMINDER -->
+
+  <!-- PRESCRIPTIONS -->
+  <div class="card">
+    <h3>Your Prescriptions</h3>
+    <div *ngFor="let p of prescriptions" class="prescription-row">
+      <span>{{ p.file_name }}</span>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button (click)="togglePrescriptionMedicines(p.id)">
+          {{ selectedPrescriptionId === p.id ? 'Hide Medicines' : 'View Medicines' }}
+        </button>
+        <span *ngIf="analyzedPrescriptionId === p.id">
+          <span *ngIf="arePrescriptionRemindersAdded(p.id)" style="color:green;">
+            ✔ Added
+          </span>
+          <span *ngIf="!areAllMedicinesAdded()" style="color:#d9534f;">
+            ❌ Not Fully Added
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDICINE REMINDER -->
+  <!-- MEDICINE REMINDER -->
+  <div class="card">
+    <h3>Medicine Reminder</h3>
+    <div *ngFor="let med of medicines">
+
+      <div *ngFor="let time of med.times" class="prescription-row">
+
+        <div>
+          <strong>{{ med.name }}</strong><br>
+          <small>{{ med.dosage }} • {{ time }}</small>
+        </div>
+
+        <button [disabled]="isReminderAdded(med, time)" [ngClass]="{
+    'added-btn': isReminderAdded(med, time),
+    'default-btn': !isReminderAdded(med, time)
+  }" (click)="addReminder(med, time)">
+
+          {{ isReminderAdded(med, time) ? 'Added ✓' : 'Add Reminder' }}
+
+        </button>
+
+      </div>
+
+
+
+    </div>
+
+    <!-- Manual Add -->
+    <div class="reminder-container ">
+      <input [(ngModel)]="medicineName" placeholder="Medicine Name">
+      <input type="time" [(ngModel)]="medicineTime">
+      <button (click)="setReminder()">Add</button>
+    </div>
+
+    <!-- Reminder List -->
+    <div class="reminder-list" *ngIf="reminders.length > 0">
+      <div class="reminder-item" *ngFor="let r of reminders; let i = index">
+        <div *ngIf="!r.editing" class="reminder-view">
+          <div class="reminder-info">
+            <span class="reminder-name">{{ r.name }}</span>
+            <span class="reminder-time">{{ r.time }}</span>
+          </div>
+          <div class="reminder-actions">
+            <button class="edit-btn" (click)="editReminder(i)">Edit</button>
+            <button class="delete-btn" (click)="deleteReminder(i)">Delete</button>
+          </div>
+        </div>
+        <div *ngIf="r.editing" class="reminder-edit">
+          <input [(ngModel)]="r.name">
+          <input type="time" [(ngModel)]="r.time">
+          <button class="save-btn" (click)="saveReminder(i)">Save</button>
+          <button class="cancel-btn" (click)="cancelEdit(i)">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

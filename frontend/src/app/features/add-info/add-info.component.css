@@ -1,0 +1,45 @@
+.page-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.page-card {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid #eee9e1;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.04);
+}
+
+h2 {
+  color: #a57c43;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+input, textarea {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #eee9e1;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #c7a674;
+  box-shadow: 0 0 0 3px rgba(199,166,116,0.15);
+}
+
+.save-btn {
+  padding: 10px 20px;
+  background: #6fbfa3;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
