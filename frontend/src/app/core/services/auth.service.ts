@@ -220,6 +220,7 @@ export class AuthService {
             this.getAuthHeaders()
         );
     }
+    
     getLatestAdditionalInfo() {
         return this.http.get(`${this.apiUrl}/get-latest-add-info`);
     }
