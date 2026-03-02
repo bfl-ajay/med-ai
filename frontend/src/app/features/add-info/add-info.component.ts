@@ -12,11 +12,19 @@ export class AddInfoComponent implements OnInit {
   allergies: string = '';
   notes: string = '';
   additionalInfos: any[] = [];
+  pastRecords: any[] = [];
 
   constructor(private authService: AuthService) { }
 
   ngOnInit() {
-    this.loadInfo();
+    this.loadPastRecords();
+  }
+
+  loadPastRecords() {
+    this.authService.getAdditionalInfo().subscribe((data: any) => {
+      console.log("FROM API:", data);  // 👈 ADD THIS
+      this.pastRecords = data;
+    });
   }
 
   save() {
@@ -27,15 +35,12 @@ export class AddInfoComponent implements OnInit {
     };
 
     this.authService.saveAdditionalInfo(data).subscribe(() => {
-      alert("Information saved successfully");
+      this.emergencyContact = '';
+      this.allergies = '';
+      this.notes = '';
 
-      this.loadInfo();
-    });
-  }
-
-  loadInfo() {
-    this.authService.getAdditionalInfo().subscribe((res: any) => {
-      this.additionalInfos = res;
+      // Reload after save
+      this.loadPastRecords();
     });
   }
 }

@@ -2,58 +2,80 @@
 
   <!-- PROFILE CARD -->
   <div class="card">
-    <h2>Welcome {{ profile.name }}</h2>
-
-    <p><strong>Age:</strong> {{ profile.age }}</p>
-    <p><strong>BMI:</strong> {{ profile.bmi | number:'1.1-2' }}</p>
-    <p><strong>Lifestyle:</strong> {{ profile.lifestyle }}</p>
-    <p><strong>Blood Group:</strong> {{ profile.bloodGroup }}</p>
-
+    <h2>Welcome {{ profile?.name }}</h2>
+    <p><strong>Age:</strong> {{ profile?.age }}</p>
+    <p>BMI: {{ profile?.bmi }}</p>
+    <p><strong>Lifestyle:</strong> {{ profile?.lifestyle }}</p>
+    <p><strong>Blood Group:</strong> {{ profile?.bloodGroup }}</p>
     <h4>Known Diseases</h4>
-    <ul *ngIf="profile.knownDiseases?.length > 0; else noDiseases">
-      <li *ngFor="let disease of profile.knownDiseases">
+    <ul *ngIf="profile?.knownDiseases?.length > 0; else noDiseases">
+      <li *ngFor="let disease of profile?.knownDiseases">
         {{ disease }}
       </li>
     </ul>
-
     <ng-template #noDiseases>
       <p>No known diseases</p>
     </ng-template>
   </div>
 
   <!-- ADDITIONAL INFO -->
-  <div class="card" *ngIf="additionalInfos?.length > 0">
+  <div class="card" *ngIf="latestInfo">
+
     <h3>Additional Information</h3>
 
-    <div *ngFor="let info of additionalInfos">
-      <p><strong>Emergency Contact:</strong> {{ info.emergency_contact }}</p>
-      <p><strong>Allergies:</strong> {{ info.allergies }}</p>
-      <p><strong>Notes:</strong> {{ info.medical_notes }}</p>
-      <hr>
-    </div>
-  </div>
+    <p *ngIf="latestInfo.emergency_contact">
+      <strong>Emergency Contact:</strong>
+      {{ latestInfo.emergency_contact }}
+    </p>
 
+    <p *ngIf="latestInfo.allergies">
+      <strong>Allergies:</strong>
+      {{ latestInfo.allergies }}
+    </p>
+
+    <p *ngIf="latestInfo.medical_notes">
+      <strong>Notes:</strong>
+      {{ latestInfo.medical_notes }}
+    </p>
+
+    <small *ngIf="latestInfo.created_at">
+      Last updated:
+      {{ latestInfo.created_at | date:'medium' }}
+    </small>
+
+  </div>
   <!-- Daily Blood Pressure -->
   <div class="card">
     <h3>🩺 Blood Pressure Tracker</h3>
 
     <!-- ADD BP SECTION -->
     <div class="bp-add-section">
-
       <div class="bp-add-input-row">
         <input type="number" placeholder="Systolic" [(ngModel)]="systolic" />
-
         <input type="number" placeholder="Diastolic" [(ngModel)]="diastolic" />
-
         <input type="number" placeholder="Pulse" [(ngModel)]="pulse" />
-
         <button class="add-bp-btn" (click)="addBP()">
           Add
         </button>
       </div>
-
     </div>
 
+    <div *ngIf="getLatestBP()" class="latest-bp-display">
+      <div class="latest-bp-card" [ngClass]="getBPClass(getLatestBP().systolic, getLatestBP().diastolic)">
+        <div class="latest-title">
+          Latest Reading
+        </div>
+        <div class="latest-values">
+          {{ getLatestBP().systolic }}/{{ getLatestBP().diastolic }}
+          <span class="pulse-label">
+            • Pulse {{ getLatestBP().pulse || '-' }}
+          </span>
+        </div>
+        <div class="latest-date">
+          {{ getLatestBP().recorded_at | date:'medium' }}
+        </div>
+      </div>
+    </div>
     <!-- CURRENT WEEK -->
     <div *ngIf="currentBP.length > 0">
       <h4>Current Week</h4>
@@ -84,43 +106,18 @@
         </tr>
       </table>
     </div>
-    <div *ngIf="getLatestBP()" class="latest-bp-display">
 
-      <div class="latest-bp-card" [ngClass]="getBPClass(getLatestBP().systolic, getLatestBP().diastolic)">
-
-        <div class="latest-title">
-          Latest Reading
-        </div>
-
-        <div class="latest-values">
-          {{ getLatestBP().systolic }}/{{ getLatestBP().diastolic }}
-          <span class="pulse-label">
-            • Pulse {{ getLatestBP().pulse || '-' }}
-          </span>
-        </div>
-
-        <div class="latest-date">
-          {{ getLatestBP().recorded_at | date:'medium' }}
-        </div>
-
-      </div>
-
-    </div>
 
     <!-- PREVIOUS HISTORY -->
     <div *ngIf="previousBP.length > 0">
       <h4 style="margin-top: 30px;">Previous History</h4>
-
       <div *ngFor="let week of previousBP" class="week-section">
         <div class="week-header" (click)="week.expanded = !week.expanded">
-
           📅 Week of {{ week.weekStart }}
-
           <span>
             {{ week.expanded ? '▲' : '▼' }}
           </span>
         </div>
-
         <div *ngIf="week.expanded">
           <table class="bp-table">
             <tr>
@@ -148,7 +145,6 @@
               </td>
             </tr>
           </table>
-
         </div>
       </div>
     </div>
@@ -158,12 +154,12 @@
   <div class="card">
     <h3>Health Score</h3>
     <div class="progress">
-      <div class="progress-bar" [style.width.%]="profile.healthScore" [ngStyle]="{
-          'background-color': profile.healthScore >= 80 ? '#4caf50' :
-                              profile.healthScore >= 60 ? '#ffc107' :
+      <div class="progress-bar" [style.width.%]="profile?.healthScore" [ngStyle]="{
+          'background-color': profile?.healthScore >= 80 ? '#4caf50' :
+                              profile?.healthScore >= 60 ? '#ffc107' :
                               '#f44336'
         }">
-        {{ profile.healthScore }}%
+        {{ profile?.healthScore }}%
       </div>
     </div>
   </div>
@@ -216,8 +212,6 @@
     </div>
   </div>
 
-  <!-- REMINDER -->
-
   <!-- PRESCRIPTIONS -->
   <div class="card">
     <h3>Your Prescriptions</h3>
@@ -240,7 +234,6 @@
   </div>
 
   <!-- MEDICINE REMINDER -->
-  <!-- MEDICINE REMINDER -->
   <div class="card">
     <h3>Medicine Reminder</h3>
     <div *ngFor="let med of medicines">
@@ -262,9 +255,6 @@
         </button>
 
       </div>
-
-
-
     </div>
 
     <!-- Manual Add -->

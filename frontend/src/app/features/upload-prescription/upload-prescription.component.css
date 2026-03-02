@@ -2,7 +2,7 @@
 
 .page-container {
   max-width: 900px;
-  margin: 40px auto;
+  margin: 0px auto;
   padding: 20px;
 }
 
@@ -117,6 +117,7 @@
   border: 1px solid #eee9e1;
   transition: 0.2s ease;
   flex-wrap: wrap;
+  flex-direction: row;
 }
 
 .report-item:hover {
@@ -213,5 +214,12 @@
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 30px;
+  flex-direction: row;
+}
+
+@media (max-width: 768px) {
+  .report-item{
+    flex-direction: column;
+  }
 }

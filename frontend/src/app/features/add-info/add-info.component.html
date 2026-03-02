@@ -18,5 +18,35 @@
     </div>
 
     <button class="save-btn" (click)="save()">Save Info</button>
+
+    <!-- ================= PAST RECORDS ================= -->
+    <div class="past-info-section" *ngIf="pastRecords.length > 0">
+
+      <h3>Previous Saved Information</h3>
+
+      <div class="past-card" *ngFor="let record of pastRecords">
+
+        <div class="past-row">
+          <strong>Emergency Contact:</strong>
+          <span>{{ record.emergency_contact }}</span>
+        </div>
+
+        <div class="past-row" *ngIf="record.allergies">
+          <strong>Allergies:</strong>
+          <span>{{ record.allergies }}</span>
+        </div>
+
+        <div class="past-row" *ngIf="record.medical_notes">
+          <strong>Medical Notes:</strong>
+          <span>{{ record.medical_notes }}</span>
+        </div>
+
+        <div class="past-date">
+          Saved on: {{ record.created_at | date:'medium' }}
+        </div>
+
+      </div>
+
+    </div>
   </div>
 </div>

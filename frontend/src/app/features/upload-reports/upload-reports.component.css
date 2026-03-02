@@ -2,7 +2,7 @@
 
 .page-container {
   max-width: 900px;
-  margin: 40px auto;
+  margin: 0px auto;
   padding: 20px;
 }
 
@@ -154,6 +154,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-direction: row;
 }
 
 /* File Info */
@@ -180,11 +181,13 @@
   font-size: 0.8rem;
   color: #8c8c8c;
   margin-top: 2px;
+  margin-bottom: 11px;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 30px;
+  flex-direction: row;
 }
 
 /* ---------- ANALYSIS SECTION ---------- */
@@ -223,4 +226,10 @@
 .high {
   color: red;
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .report-header{
+    flex-direction: column;
+  }
 }

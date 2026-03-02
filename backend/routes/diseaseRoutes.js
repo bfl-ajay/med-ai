@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// GET /api/diseases?search=dia
 router.get('/', async (req, res) => {
   const search = req.query.search || '';
 

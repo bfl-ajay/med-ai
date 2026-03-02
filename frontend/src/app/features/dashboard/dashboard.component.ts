@@ -14,7 +14,7 @@ export class DashboardComponent implements OnInit {
 
   profile: any;
   aiPlan: any;
-  additionalInfos: any[] = [];
+
   medicines: any[] = [];
   medicineName: string = '';
   medicineTime: string = '';
@@ -30,13 +30,18 @@ export class DashboardComponent implements OnInit {
   analyzedPrescriptionId: number | null = null;
   selectedPrescriptionId: number | null = null;
   showAll: boolean = false;
-
+  isMobile = false;
+  isSidebarOpen = false;
+  checkScreen() {
+    this.isMobile = window.innerWidth <= 768;
+  }
   reminders: { id: number; name: string; time: string; editing: boolean }[] = [];
+  latestInfo: any;
 
   constructor(private router: Router, private authService: AuthService) { }
 
   ngOnInit() {
-    this.loadAdditionalInfo();
+
     this.loadBP();
     this.authService.getPrescriptions().subscribe((data: any) => {
       this.prescriptions = data;
@@ -59,27 +64,21 @@ export class DashboardComponent implements OnInit {
 
     });
 
-    this.authService.getAdditionalInfo().subscribe({
-      next: (res: any) => {
-        this.additionalInfos = res;
-      },
-      error: (err) => {
-        console.log("Additional info load error", err);
-      }
-    });
-
+    this.authService.getLatestAdditionalInfo()
+      .subscribe((data: any) => {
+        this.latestInfo = data;
+      });
     // Load reminders
     this.authService.getReminders().subscribe((data: any) => {
       console.log("REMINDERS FROM DB:", data);
       this.reminders = data;
     });
+    this.checkScreen();
+    window.addEventListener('resize', () => this.checkScreen());
+
+    this.checkScreen();
   }
 
-  loadAdditionalInfo() {
-    this.authService.getAdditionalInfo().subscribe((res: any) => {
-      this.additionalInfos = res || [];
-    });
-  }
   // HEALTH SCORE
   calculateHealthScore(): number {
 

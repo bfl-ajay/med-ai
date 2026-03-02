@@ -60,7 +60,11 @@ const uploadPrescription = multer({
     limits: { fileSize: 5 * 1024 * 1024 }
 });
 
+
 router.post('/register', async (req, res) => {
+
+    console.log("REGISTER ROUTE HIT");
+
     const {
         name,
         email,
@@ -75,79 +79,116 @@ router.post('/register', async (req, res) => {
     } = req.body;
 
     try {
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        const sql = `INSERT INTO users (name, email, password, dob,height , weight, bloodGroup, known_diseases, mobile_no, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const knownDiseasesJson = Array.isArray(knownDiseases) ? JSON.stringify(knownDiseases) : null;
-        console.log("DOB RECEIVED:", dob);
-        db.query(sql, [name, email, hashedPassword, dob || null, height || null, weight || null, bloodGroup || null, knownDiseasesJson, mobile_no || null, gender || null], (err, result) => {
-            if (err) {
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.status(400).json({ message: 'User already exists' });
-                }
-                console.error('DB error on register:', err);
-                return res.status(500).json({ message: 'Database error' });
-            }
-            res.status(201).json({ message: 'User registered successfully' });
+
+        const sql = `
+            INSERT INTO users 
+            (name, email, password, dob, height, weight, bloodGroup, known_diseases, mobile_no, gender) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const knownDiseasesJson = Array.isArray(knownDiseases)
+            ? JSON.stringify(knownDiseases)
+            : null;
+
+        const [result] = await db.execute(
+            sql,
+            [
+                name,
+                email,
+                hashedPassword,
+                dob || null,
+                height || null,
+                weight || null,
+                bloodGroup || null,
+                knownDiseasesJson,
+                mobile_no || null,
+                gender || null
+            ]
+        );
+
+        console.log("DB EXECUTED SUCCESSFULLY");
+
+        return res.status(201).json({
+            message: "User registered successfully"
         });
+
     } catch (err) {
-        console.error('Server error on register:', err);
-        res.status(500).json({ message: 'Server error' });
+
+        console.error("DB ERROR:", err);
+
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        return res.status(500).json({ message: 'Database error' });
     }
-
 });
 
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    const sql = 'SELECT * FROM users WHERE email = ?';
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    db.query(sql, [email], async (err, results) => {
-        if (err) {
+        const [results] = await db.execute(
+            'SELECT * FROM users WHERE email = ?',
+            [email]
+        );
+
+        if (results.length === 0) {
             return res.status(400).json({ message: 'Invalid email or password' });
-        }
-        if (!results || results.length === 0) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-        const user = results[0];
-        try {
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(400).json({ message: 'Invalid email or password' });
-            }
-            const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            res.json({ token });
-        } catch (compareErr) {
-            console.error('Error comparing passwords:', compareErr);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    });
-
-});
-
-router.get('/profile', authMiddleware, (req, res) => {
-
-    const sql = `
-SELECT 
-    name,
-    dob,
-    height,
-    weight,
-    bloodGroup,
-    known_diseases
-FROM users
-WHERE id = ?
-`;
-
-    db.query(sql, [req.user.id], (err, results) => {
-        if (err || results.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
         }
 
         const user = results[0];
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        return res.json({ token });
+
+    } catch (err) {
+        console.error("LOGIN ERROR:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.get('/profile', authMiddleware, async (req, res) => {
+    try {
+        const sql = `
+            SELECT 
+                name,
+                email,
+                dob,
+                height,
+                weight,
+                bloodGroup,
+                known_diseases
+            FROM users
+            WHERE id = ?
+        `;
+
+        const [rows] = await db.execute(sql, [req.user.id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = rows[0]; // ✅ THIS is the actual user
+
+        // ✅ Age calculation
         let age = null;
 
         if (user.dob) {
             const birthDate = new Date(user.dob);
-
             const today = new Date();
 
             age = today.getFullYear() - birthDate.getFullYear();
@@ -161,41 +202,43 @@ WHERE id = ?
                 age--;
             }
         }
-        // BMI calculation
-        const heightInMeters = user.height / 100;
-        const bmi = user.weight / (heightInMeters * heightInMeters);
 
-        // Lifestyle
-        let lifestyle = "";
-        if (bmi < 18.5) lifestyle = "Underweight - Consider a balanced diet.";
-        else if (bmi < 25) lifestyle = "Normal weight - Maintain a healthy lifestyle.";
-        else if (bmi < 30) lifestyle = "Overweight - Exercise recommended.";
-        else lifestyle = "Obese - Consult a doctor.";
+        // ✅ BMI calculation
+        let bmi = null;
 
-        //  Proper JSON parsing (THIS is the important part)
+        if (user.height && user.weight) {
+            const heightInMeters = user.height / 100;
+            bmi = user.weight / (heightInMeters * heightInMeters);
+            bmi = parseFloat(bmi.toFixed(2));
+        }
+
+        // ✅ Lifestyle
+        let lifestyle = "Complete profile to calculate BMI";
+
+        if (bmi !== null) {
+            if (bmi < 18.5)
+                lifestyle = "Underweight - Consider a balanced diet.";
+            else if (bmi < 25)
+                lifestyle = "Normal weight - Maintain a healthy lifestyle.";
+            else if (bmi < 30)
+                lifestyle = "Overweight - Exercise recommended.";
+            else
+                lifestyle = "Obese - Consult a doctor.";
+        }
+
+        // ✅ Parse diseases
         let diseases = [];
 
         if (user.known_diseases) {
             try {
-                if (typeof user.known_diseases === "string") {
-
-                    let cleaned = user.known_diseases.trim();
-
-                    if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
-                        cleaned = cleaned.slice(1, -1);
-                    }
-
-                    diseases = JSON.parse(cleaned);
-                } else {
-                    diseases = user.known_diseases;
-                }
+                diseases = JSON.parse(user.known_diseases);
             } catch (err) {
-                console.log("Parsing error:", err);
                 diseases = [];
             }
         }
-        let healthScore = 100;
 
+        // ✅ Health score
+        let healthScore = 100;
 
         if (bmi > 25) healthScore -= 15;
         if (bmi < 18.5) healthScore -= 10;
@@ -207,14 +250,62 @@ WHERE id = ?
             name: user.name,
             age,
             bmi,
+            height: user.height,
+            weight: user.weight,
             lifestyle,
             bloodGroup: user.bloodGroup,
             knownDiseases: diseases,
             healthScore,
+            email: user.email
         });
-    });
+
+    } catch (err) {
+        console.error("PROFILE ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
+router.put('/profile', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const {
+            name,
+            email,
+            height,
+            weight,
+            bloodGroup,
+            knownDiseases
+        } = req.body;
+
+        const sql = `
+            UPDATE users
+            SET name = ?, 
+                email = ?, 
+                height = ?, 
+                weight = ?, 
+                bloodGroup = ?, 
+                known_diseases = ?
+            WHERE id = ?
+        `;
+
+        await db.execute(sql, [
+            name,
+            email,
+            height || null,
+            weight || null,
+            bloodGroup || null,
+            JSON.stringify(knownDiseases || []),
+            userId
+        ]);
+
+        res.json({ message: "Profile updated successfully" });
+
+    } catch (err) {
+        console.error("UPDATE PROFILE ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
+});
 const axios = require('axios');
 
 router.post('/ai-plan', authMiddleware, async (req, res) => {
@@ -356,294 +447,303 @@ router.post('/medicine', authMiddleware, (req, res) => {
     }
 });
 
-router.post('/reminders', authMiddleware, (req, res) => {
-    const { medicineName, time } = req.body;
-    const userId = req.user.id;
+router.post('/reminders', authMiddleware, async (req, res) => {
+    try {
+        const { medicineName, time } = req.body;
+        const userId = req.user.id;
 
-    if (!medicineName || !time) {
-        return res.status(400).json({ message: "Missing fields" });
-    }
-
-    const sql = `
-        INSERT INTO reminders (user_id, medicine_name, time)
-        VALUES (?, ?, ?)
-    `;
-
-    db.query(sql, [userId, medicineName, time], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Database error" });
+        if (!medicineName || !time) {
+            return res.status(400).json({ message: "Missing fields" });
         }
+
+        const sql = `
+            INSERT INTO reminders (user_id, medicine_name, time)
+            VALUES (?, ?, ?)
+        `;
+
+        const [result] = await db.execute(sql, [userId, medicineName, time]);
 
         res.json({
             id: result.insertId,
             name: medicineName,
             time
         });
-    });
+
+    } catch (err) {
+        console.error("REMINDER INSERT ERROR:", err);
+        return res.status(500).json({ message: "Database error" });
+    }
 });
 
-router.get('/reminders', authMiddleware, (req, res) => {
-    const userId = req.user.id;
+router.get('/reminders', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
 
-    const sql = `SELECT id, medicine_name, time FROM reminders WHERE user_id = ?`;
+        const sql = `
+            SELECT id, medicine_name, time 
+            FROM reminders 
+            WHERE user_id = ?
+        `;
 
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Database error" });
-        }
+        const [rows] = await db.execute(sql, [userId]);
 
-        const reminders = results.map(r => ({
+        const reminders = rows.map(r => ({
             id: r.id,
             name: r.medicine_name,
             time: r.time
         }));
 
         res.json(reminders);
-    });
+
+    } catch (err) {
+        console.error("REMINDERS FETCH ERROR:", err);
+        return res.status(500).json({ message: "Database error" });
+    }
 });
 
-router.put('/reminders/:id', authMiddleware, (req, res) => {
-    const reminderId = req.params.id;
-    const userId = req.user.id;
-    const { name, time } = req.body;
+router.put('/reminders/:id', authMiddleware, async (req, res) => {
+    try {
+        const reminderId = req.params.id;
+        const userId = req.user.id;
+        const { name, time } = req.body;
 
-    const sql = `
-        UPDATE reminders 
-        SET medicine_name = ?, time = ?
-        WHERE id = ? AND user_id = ?
-    `;
+        const sql = `
+            UPDATE reminders 
+            SET medicine_name = ?, time = ?
+            WHERE id = ? AND user_id = ?
+        `;
 
-    db.query(sql, [name, time, reminderId, userId], (err) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Update failed" });
+        const [result] = await db.execute(sql, [name, time, reminderId, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Reminder not found or access denied" });
         }
 
         res.json({ message: "Updated successfully" });
-    });
+
+    } catch (err) {
+        console.error("REMINDER UPDATE ERROR:", err);
+        return res.status(500).json({ message: "Database error" });
+    }
 });
 
-router.delete('/reminders/:id', authMiddleware, (req, res) => {
-    const reminderId = req.params.id;
-    const userId = req.user.id;
+router.delete('/reminders/:id', authMiddleware, async (req, res) => {
+    try {
+        const reminderId = req.params.id;
+        const userId = req.user.id;
 
-    const sql = `DELETE FROM reminders WHERE id = ? AND user_id = ?`;
+        const sql = `DELETE FROM reminders WHERE id = ? AND user_id = ?`;
 
-    db.query(sql, [reminderId, userId], (err) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Delete failed" });
+        const [result] = await db.execute(sql, [reminderId, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Reminder not found or access denied" });
         }
 
         res.json({ message: "Deleted successfully" });
-    });
+    } catch (err) {
+        console.error("REMINDER DELETE ERROR:", err);
+        return res.status(500).json({ message: "Database error" });
+    }
 });
 
-router.post('/upload-report', authMiddleware, upload.single('report'), (req, res) => {
+router.post(
+    '/upload-report',
+    authMiddleware,
+    upload.single('report'),
+    async (req, res) => {
+        try {
+            const userId = req.user.id;
+
+            if (!req.file) {
+                return res.status(400).json({ message: "No file uploaded" });
+            }
+
+            const sql = `
+                INSERT INTO medical_reports (user_id, file_name, file_path)
+                VALUES (?, ?, ?)
+            `;
+
+            await db.execute(sql, [
+                userId,
+                req.file.originalname,
+                req.file.filename
+            ]);
+
+            res.json({ message: "Report uploaded successfully" });
+
+        } catch (err) {
+            console.error("UPLOAD ERROR:", err);
+            res.status(500).json({ message: "Upload failed" });
+        }
+    }
+);
+
+router.get('/reports', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
-        }
-
         const sql = `
-            INSERT INTO medical_reports (user_id, file_name, file_path)
-            VALUES (?, ?, ?)
+            SELECT id, file_name, file_path, uploaded_at
+            FROM medical_reports
+            WHERE user_id = ?
+            ORDER BY uploaded_at DESC
         `;
 
-        db.query(sql, [userId, req.file.originalname, req.file.filename], (err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ message: "Database error" });
-            }
+        const [rows] = await db.execute(sql, [userId]);
 
-            res.json({ message: "Report uploaded successfully" });
-        });
+        res.json(rows);
 
     } catch (err) {
-        console.error("UPLOAD ERROR:", err);
-        res.status(500).json({ message: "Upload failed" });
+        console.error("GET REPORTS ERROR:", err);
+        res.status(500).json({ message: "Database error" });
     }
 });
-router.get('/reports', authMiddleware, (req, res) => {
-    const userId = req.user.id;
 
-    const sql = `
-        SELECT id, file_name, file_path, uploaded_at
-        FROM medical_reports
-        WHERE user_id = ?
-        ORDER BY uploaded_at DESC
-    `;
+router.delete('/report/:id', authMiddleware, async (req, res) => {
+    try {
+        const reportId = req.params.id;
+        const userId = req.user.id;
 
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Database error" });
-        }
+        const sql = `
+            DELETE FROM medical_reports
+            WHERE id = ? AND user_id = ?
+        `;
 
-        res.json(results);
-    });
-});
-router.delete('/report/:id', authMiddleware, (req, res) => {
+        await db.execute(sql, [reportId, userId]);
 
-    const reportId = req.params.id;
-    const userId = req.user.id;
-
-    const sql = `DELETE FROM medical_reports WHERE id = ? AND user_id = ?`;
-
-    db.query(sql, [reportId, userId], (err) => {
-        if (err) return res.status(500).json({ message: "Delete failed" });
         res.json({ message: "Deleted successfully" });
-    });
+
+    } catch (err) {
+        console.error("DELETE REPORT ERROR:", err);
+        res.status(500).json({ message: "Delete failed" });
+    }
 });
 
 router.post(
     '/upload-prescription',
     authMiddleware,
     uploadPrescription.single('prescription'),
-    (req, res) => {
+    async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const doctorName = req.body.doctorName || null;
+            const notes = req.body.notes || null;
 
+            if (!req.file) {
+                return res.status(400).json({ message: "No file uploaded" });
+            }
+
+            const sql = `
+                INSERT INTO prescriptions
+                (user_id, file_name, file_path, doctor_name, notes)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+
+            await db.execute(sql, [
+                userId,
+                req.file.originalname,
+                req.file.filename,
+                doctorName,
+                notes
+            ]);
+
+            res.json({ message: "Prescription uploaded successfully" });
+
+        } catch (err) {
+            console.error("UPLOAD PRESCRIPTION ERROR:", err);
+            res.status(500).json({ message: "Database error" });
+        }
+    }
+);
+router.get('/prescriptions', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const sql = `
+            SELECT id, file_name, file_path, doctor_name, notes, uploaded_at
+            FROM prescriptions
+            WHERE user_id = ?
+            ORDER BY uploaded_at DESC
+        `;
+
+        const [rows] = await db.execute(sql, [userId]);
+
+        res.json(rows);
+
+    } catch (err) {
+        console.error("GET PRESCRIPTIONS ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
+});
+
+router.post('/save-manual-prescription', authMiddleware, async (req, res) => {
+    try {
         const userId = req.user.id;
         const doctorName = req.body.doctorName || null;
-        const notes = req.body.notes || null;
+        const manualText = req.body.manualText || null;
 
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
+        if (!manualText) {
+            return res.status(400).json({ message: "Prescription text required" });
         }
 
         const sql = `
-      INSERT INTO prescriptions
-      (user_id, file_name, file_path, doctor_name, notes)
-      VALUES (?, ?, ?, ?, ?)
-    `;
+            INSERT INTO prescriptions
+            (user_id, doctor_name, manual_text)
+            VALUES (?, ?, ?)
+        `;
 
-        db.query(sql, [
-            userId,
-            req.file.originalname,
-            req.file.filename,
-            doctorName,
-            notes
-        ], (err) => {
-            if (err) return res.status(500).json({ message: "Database error" });
-            res.json({ message: "Prescription uploaded successfully" });
-        });
-    });
+        await db.execute(sql, [userId, doctorName, manualText]);
 
-router.get('/prescriptions', authMiddleware, (req, res) => {
-    const userId = req.user.id;
-
-    const sql = `
-      SELECT id, file_name, file_path, doctor_name, notes, uploaded_at
-      FROM prescriptions
-      WHERE user_id = ?
-      ORDER BY uploaded_at DESC
-    `;
-
-    db.query(sql, [userId], (err, results) => {
-        if (err) return res.status(500).json({ message: "Database error" });
-        res.json(results);
-    });
-});
-router.post('/save-manual-prescription', authMiddleware, (req, res) => {
-
-    const userId = req.user.id;
-    const doctorName = req.body.doctorName || null;
-    const manualText = req.body.manualText || null;
-
-    if (!manualText) {
-        return res.status(400).json({ message: "Prescription text required" });
-    }
-
-    const sql = `
-    INSERT INTO prescriptions
-    (user_id, doctor_name, manual_text)
-    VALUES (?, ?, ?)
-  `;
-
-    db.query(sql, [userId, doctorName, manualText], (err) => {
-        if (err) return res.status(500).json({ message: "Database error" });
         res.json({ message: "Manual prescription saved" });
-    });
+
+    } catch (err) {
+        console.error("MANUAL PRESCRIPTION ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
 });
 
-router.post('/save-add-info', authMiddleware, (req, res) => {
-    const { emergencyContact, allergies, notes } = req.body;
-    const userId = req.user.id;
+router.get('/get-add-info', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
 
-    const checkSql = `
-    SELECT id FROM user_additional_info
-    WHERE user_id = ?
-  `;
+        const sql = `
+            SELECT *
+            FROM user_additional_info
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        `;
 
-    db.query(checkSql, [userId], (err, results) => {
-        if (err) {
-            console.error("CHECK ERROR:", err);
-            return res.status(500).json({ message: "Database error" });
-        }
+        const [rows] = await db.execute(sql, [userId]);
 
-        if (results.length > 0) {
-            // UPDATE existing
-            const updateSql = `
-        UPDATE user_additional_info
-        SET emergency_contact = ?, allergies = ?, medical_notes = ?
-        WHERE user_id = ?
-      `;
+        res.json(rows);
 
-            db.query(updateSql,
-                [emergencyContact, allergies, notes, userId],
-                (err2) => {
-                    if (err2) {
-                        console.error("UPDATE ERROR:", err2);
-                        return res.status(500).json({ message: "Update failed" });
-                    }
-
-                    res.json({ message: "Information updated successfully" });
-                });
-
-        } else {
-            // INSERT new
-            const insertSql = `
-        INSERT INTO user_additional_info
-        (user_id, emergency_contact, allergies, medical_notes)
-        VALUES (?, ?, ?, ?)
-      `;
-
-            db.query(insertSql,
-                [userId, emergencyContact, allergies, notes],
-                (err3) => {
-                    if (err3) {
-                        console.error("INSERT ERROR:", err3);
-                        return res.status(500).json({ message: "Insert failed" });
-                    }
-
-                    res.json({ message: "Information saved successfully" });
-                });
-        }
-    });
+    } catch (err) {
+        console.error("GET ADD INFO ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
 });
 
-router.get('/get-add-info', authMiddleware, (req, res) => {
+router.get('/get-latest-add-info', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
 
-    const userId = req.user.id;
+        const sql = `
+            SELECT *
+            FROM user_additional_info
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        `;
 
-    const sql = `
-    SELECT * FROM user_additional_info
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-  `;
+        const [rows] = await db.execute(sql, [userId]);
 
-    db.query(sql, [userId], (err, results) => {
+        res.json(rows[0] || null);
 
-        if (err) {
-            console.error("DB ERROR:", err);
-            return res.status(500).json({ message: "Database error" });
-        }
-
-        res.json(results);
-    });
+    } catch (err) {
+        console.error("GET LATEST ADD INFO ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
 });
 
 router.get('/analyze-report/:id', authMiddleware, async (req, res) => {
@@ -652,60 +752,57 @@ router.get('/analyze-report/:id', authMiddleware, async (req, res) => {
         const userId = req.user.id;
 
         const sql = `
-      SELECT file_path 
-      FROM medical_reports
-      WHERE id = ? AND user_id = ?
-    `;
+            SELECT file_path
+            FROM medical_reports
+            WHERE id = ? AND user_id = ?
+        `;
 
-        db.query(sql, [reportId, userId], async (err, results) => {
+        const [rows] = await db.execute(sql, [reportId, userId]);
 
-            if (err || results.length === 0) {
-                return res.status(404).json({ message: "Report not found" });
-            }
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Report not found" });
+        }
 
-            const filePath = path.join(__dirname, '../uploads/reports/', results[0].file_path);
+        const filePath = path.join(
+            __dirname,
+            '../uploads/reports/',
+            rows[0].file_path
+        );
 
-            let extractedText = "";
+        let extractedText = "";
 
-            // If PDF
-            if (filePath.endsWith('.pdf')) {
-                const dataBuffer = fs.readFileSync(filePath);
-                const pdfData = await pdf(dataBuffer);
-                extractedText = pdfData.text;
-            }
-            // If Image
-            else {
-                const result = await Tesseract.recognize(filePath, 'eng');
-                extractedText = result.data.text;
-            }
+        if (filePath.endsWith('.pdf')) {
+            const dataBuffer = fs.readFileSync(filePath);
+            const pdfData = await pdf(dataBuffer);
+            extractedText = pdfData.text;
+        } else {
+            const result = await Tesseract.recognize(filePath, 'eng');
+            extractedText = result.data.text;
+        }
 
-            // Simple AI logic
-            const suggestions = generateSuggestions(extractedText);
+        const suggestions = generateSuggestions(extractedText);
 
-            res.json({
-                extractedText,
-                suggestions
-            });
-
+        res.json({
+            extractedText,
+            suggestions
         });
 
     } catch (error) {
-        console.error("Analysis Error:", error);
+        console.error("ANALYZE REPORT ERROR:", error);
         res.status(500).json({ message: "Failed to analyze report" });
     }
 });
-
 router.get("/analyze-prescription/:id", authMiddleware, async (req, res) => {
     try {
         const prescriptionId = req.params.id;
         const userId = req.user.id;
 
-        const [rows] = await db.promise().query(
+        const [rows] = await db.execute(
             "SELECT * FROM prescriptions WHERE id = ? AND user_id = ?",
             [prescriptionId, userId]
         );
 
-        if (!rows || rows.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ message: "Prescription not found" });
         }
 
@@ -717,10 +814,6 @@ router.get("/analyze-prescription/:id", authMiddleware, async (req, res) => {
 
         const result = await Tesseract.recognize(filePath, "eng");
         const extractedText = result.data.text;
-
-        console.log("========== OCR OUTPUT ==========");
-        console.log(extractedText);
-        console.log("================================");
 
         if (!extractedText) {
             return res.json({
@@ -737,30 +830,23 @@ router.get("/analyze-prescription/:id", authMiddleware, async (req, res) => {
 
         function convertFrequency(text) {
             const lower = text.toLowerCase();
-
             if (lower.includes("three")) return ["08:00", "13:00", "20:00"];
             if (lower.includes("twice")) return ["08:00", "20:00"];
             if (lower.includes("once")) return ["08:00"];
-
-            if (lower.includes("as needed")) {
-                return ["PRN"]; // PRN = medical term for "as needed"
-            }
-
-            return ["08:00"]; // fallback
+            if (lower.includes("as needed")) return ["PRN"];
+            return ["08:00"];
         }
 
         for (let line of lines) {
             line = line.trim();
             if (!line) continue;
 
-            // Match medicine name like "1. Ibuprofen"
             const medMatch = line.match(/^\d+\.\s*(.+)/);
             if (medMatch) {
                 currentMedicine = medMatch[1].trim();
                 continue;
             }
 
-            // Match dosage line
             if (line.toLowerCase().includes("dosage")) {
                 const dosageMatch = line.match(
                     /(\d+\s?(mg|ml|units|iu|puffs?|tablets?|capsules?|drops?))/i
@@ -771,7 +857,6 @@ router.get("/analyze-prescription/:id", authMiddleware, async (req, res) => {
                 continue;
             }
 
-            // Match frequency line
             if (line.toLowerCase().includes("frequency")) {
                 currentTimes = convertFrequency(line);
 
@@ -783,41 +868,11 @@ router.get("/analyze-prescription/:id", authMiddleware, async (req, res) => {
                     });
                 }
 
-                // reset for next medicine
                 currentMedicine = null;
                 currentDosage = null;
                 currentTimes = [];
             }
         }
-
-        console.log("PARSED MEDICINES:", parsedMedicines);
-
-
-        // Insert into reminders
-        //     for (const med of parsedMedicines) {
-        //         for (const time of med.times) {
-
-        //             const normalizedName = med.name.trim().toLowerCase();
-        //             const normalizedDosage = med.dosage.trim().toLowerCase();
-        //             const normalizedTime = time.trim();
-
-        //             const [existing] = await db.promise().query(
-        //                 `SELECT id FROM reminders 
-        //    WHERE user_id = ? 
-        //    AND LOWER(TRIM(medicine_name)) = ? 
-        //    AND LOWER(TRIM(dosage)) = ? 
-        //    AND time = ?`,
-        //                 [userId, normalizedName, normalizedDosage, normalizedTime]
-        //             );
-
-        //             if (existing.length === 0) {
-        //                 await db.promise().query(
-        //                     "INSERT INTO reminders (user_id, medicine_name, dosage, time) VALUES (?, ?, ?, ?)",
-        //                     [userId, normalizedName, normalizedDosage, normalizedTime]
-        //                 );
-        //             }
-        //         }
-        //     }
 
         res.json({
             extractedText,
@@ -830,49 +885,56 @@ router.get("/analyze-prescription/:id", authMiddleware, async (req, res) => {
     }
 });
 
-router.post('/blood_pressure_records', authMiddleware, (req, res) => {
-    const userId = req.user.id;
-    const { systolic, diastolic, pulse } = req.body;
+router.post('/blood_pressure_records', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { systolic, diastolic, pulse } = req.body;
 
-    if (!systolic || !diastolic) {
-        return res.status(400).json({ message: "Missing BP values" });
-    }
-
-    const sql = `
-        INSERT INTO blood_pressure_records
-        (user_id, systolic, diastolic, pulse)
-        VALUES (?, ?, ?, ?)
-    `;
-
-    db.query(sql, [userId, systolic, diastolic, pulse || null], (err) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Database error" });
+        if (!systolic || !diastolic) {
+            return res.status(400).json({ message: "Missing BP values" });
         }
+
+        const sql = `
+            INSERT INTO blood_pressure_records
+            (user_id, systolic, diastolic, pulse)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        await db.execute(sql, [
+            userId,
+            systolic,
+            diastolic,
+            pulse || null
+        ]);
 
         res.json({ message: "Blood pressure recorded successfully" });
-    });
-});
-router.get('/blood_pressure_records', authMiddleware, (req, res) => {
-    const userId = req.user.id;
 
-    const sql = `
-        SELECT id, systolic, diastolic, pulse, recorded_at
-        FROM blood_pressure_records
-        WHERE user_id = ?
-        ORDER BY recorded_at DESC
-    `;
-
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Database error" });
-        }
-
-        res.json(results);
-    });
+    } catch (err) {
+        console.error("BP INSERT ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
 });
 
+router.get('/blood_pressure_records', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const sql = `
+            SELECT id, systolic, diastolic, pulse, recorded_at
+            FROM blood_pressure_records
+            WHERE user_id = ?
+            ORDER BY recorded_at DESC
+        `;
+
+        const [rows] = await db.execute(sql, [userId]);
+
+        res.json(rows);
+
+    } catch (err) {
+        console.error("BP FETCH ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
+});
 router.post("/add-reminder-from-prescription", authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -930,51 +992,52 @@ function detectMedicalTerms(text) {
     return medLookup.filter(term => lower.includes(term));
 }
 
-router.delete('/prescriptions/:id', authMiddleware, (req, res) => {
-    const id = req.params.id;
-    const userId = req.user.id;
+router.delete('/prescriptions/:id', authMiddleware, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const userId = req.user.id;
 
-    const sql = `
-        DELETE FROM prescriptions 
-        WHERE id = ? AND user_id = ?
-    `;
+        const sql = `
+            DELETE FROM prescriptions
+            WHERE id = ? AND user_id = ?
+        `;
 
-    db.query(sql, [id, userId], (err, result) => {
-        if (err) {
-            console.error("DELETE ERROR:", err);
-            return res.status(500).json({ message: "Delete failed" });
-        }
+        const [result] = await db.execute(sql, [id, userId]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Prescription not found" });
         }
 
         res.json({ message: "Deleted successfully" });
-    });
+
+    } catch (err) {
+        console.error("DELETE PRESCRIPTION ERROR:", err);
+        res.status(500).json({ message: "Delete failed" });
+    }
 });
 
-router.post('/contact', (req, res) => {
-    const { name, email, message } = req.body;
+router.post('/contact', async (req, res) => {
+    try {
+        const { name, email, message } = req.body;
 
-    if (!name || !email || !message) {
-        return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const sql = `
-        INSERT INTO contact_messages (name, email, message)
-        VALUES (?, ?, ?)
-    `;
-
-    db.query(sql, [name, email, message], (err) => {
-        if (err) {
-            console.error("CONTACT INSERT ERROR:", err);
-            return res.status(500).json({ message: "Database error" });
+        if (!name || !email || !message) {
+            return res.status(400).json({ message: "All fields are required" });
         }
 
-        res.json({ message: "Message sent successfully" });
-    });
-});
+        const sql = `
+            INSERT INTO contact_messages (name, email, message)
+            VALUES (?, ?, ?)
+        `;
 
+        await db.execute(sql, [name, email, message]);
+
+        res.json({ message: "Message sent successfully" });
+
+    } catch (err) {
+        console.error("CONTACT ERROR:", err);
+        res.status(500).json({ message: "Database error" });
+    }
+});
 function generateSuggestions(text) {
 
     if (!text) {

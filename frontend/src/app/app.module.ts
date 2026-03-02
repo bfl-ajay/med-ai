@@ -17,6 +17,7 @@ import { NavbarComponent } from './shared/navbar/navbar.component';
 import { UploadReportsComponent } from './features/upload-reports/upload-reports.component';
 import { UploadPrescriptionComponent } from './features/upload-prescription/upload-prescription.component';
 import { AddInfoComponent } from './features/add-info/add-info.component';
+import { ProfileComponent } from './features/profile/profile.component';
 
 @NgModule({
     declarations: [
@@ -28,13 +29,15 @@ import { AddInfoComponent } from './features/add-info/add-info.component';
         NavbarComponent,
         UploadReportsComponent,       
         UploadPrescriptionComponent,  
-        AddInfoComponent
+        AddInfoComponent,
+        ProfileComponent
     ],
     imports: [
         BrowserModule,
         FormsModule,
         AppRoutingModule,
-        HttpClientModule
+        HttpClientModule, 
+        RouterModule
     ],
     providers: [{ 
         provide: HTTP_INTERCEPTORS, 

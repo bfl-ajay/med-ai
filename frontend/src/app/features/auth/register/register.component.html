@@ -112,8 +112,8 @@
 
                         <!-- Suggestions -->
                         <div class="suggestions" *ngIf="filteredDiseases.length > 0">
-                            <div class="suggestion-item" *ngFor="let s of filteredDiseases" (click)="selectDisease(s)">
-                                {{ s }}
+                            <div *ngFor="let s of filteredDiseases" (click)="selectDisease(s)">
+                                {{ s.name }}
                             </div>
                         </div>
 

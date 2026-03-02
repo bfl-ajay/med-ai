@@ -10,6 +10,7 @@ import { RegisterComponent } from './features/auth/register/register.component';
 import { UploadReportsComponent } from './features/upload-reports/upload-reports.component';
 import { UploadPrescriptionComponent } from './features/upload-prescription/upload-prescription.component';
 import { AddInfoComponent } from './features/add-info/add-info.component';
+import { ProfileComponent } from './features/profile/profile.component';
 
 
 const routes: Routes = [
@@ -18,6 +19,7 @@ const routes: Routes = [
     { path: 'register', component: RegisterComponent },
     { path: 'proytected', component: DashboardComponent, canActivate: [AuthGuard] },
     { path: 'dashboard', component: DashboardComponent },
+    { path: 'profile', component: ProfileComponent},
     { path: 'upload-reports', component: UploadReportsComponent },
     { path: 'upload-prescription', component: UploadPrescriptionComponent },
     { path: 'add-info', component: AddInfoComponent },

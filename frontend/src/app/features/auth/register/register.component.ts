@@ -94,6 +94,7 @@ export class RegisterComponent {
   }
 
   register() {
+    //console.log("REGISTER ROUTE HIT");
 
     const data = {
       name: this.name,
@@ -103,41 +104,62 @@ export class RegisterComponent {
       height: this.height,
       weight: this.weight,
       bloodGroup: this.bloodGroup,
+      knownDiseases: this.knownDiseases,
       email: this.email,
       password: this.password
     };
 
+    console.log("Sending data:", data);
+
     this.authService.register(data).subscribe({
-      next: () => {
-        alert('Registration successful!');
+      next: (res) => {
+        console.log("FULL RESPONSE:", res);
+
+        alert("Registration successful!");
+
         this.router.navigate(['/login']);
       },
-      error: () => {
-        alert('Registration failed.');
+      error: (err) => {
+        console.log("ERROR RESPONSE:", err);
+      },
+      complete: () => {
+        console.log("REQUEST COMPLETED");
       }
     });
   }
+
   onDiseaseInput() {
+
     if (!this.diseaseInput.trim()) {
       this.filteredDiseases = [];
       return;
     }
 
-    console.log("Searching:", this.diseaseInput);
-
     this.diseaseService.searchDiseases(this.diseaseInput)
-      .subscribe(data => {
-        console.log("API Response:", data);
-        this.filteredDiseases = data.filter(d =>
-          !this.knownDiseases.includes(d)
-        );
+      .subscribe((response: any) => {
+
+        const results = response[3] || [];
+
+        this.filteredDiseases = results
+          .map((item: any) => ({
+            code: item[0],
+            name: item[1]
+          }))
+          .filter((item: any) =>
+            !item.name.toLowerCase().includes('poisoning') &&
+            !item.name.toLowerCase().includes('underdosing')
+          );
       });
   }
 
-  selectDisease(disease: string) {
-    if (!this.knownDiseases.includes(disease)) {
-      this.knownDiseases.push(disease);
+  selectDisease(disease: any) {
+
+    const formatted = `${disease.code} - ${disease.name}`;
+
+    if (!this.knownDiseases.includes(formatted)) {
+      this.knownDiseases.push(formatted);
     }
+
     this.diseaseInput = '';
     this.filteredDiseases = [];
   }

@@ -61,11 +61,46 @@
           </a>
         </li>
 
-        <li>
-          <button class="btn btn-logout" (click)="logout(); closeMenu()">
-            Logout
-          </button>
+        <li class="profile-wrapper" *ngIf="user">
+          <div class="profile-circle" (click)="toggleProfileMenu()">
+            {{ user?.name?.charAt(0) | uppercase }}
+          </div>
+          <div class="profile-dropdown" *ngIf="profileMenuOpen">
+            <div class="profile-dropdown-header">
+              <div class="dropdown-avatar">
+                {{ user?.name?.charAt(0) }}
+              </div>
+              <div class="profile-text">
+                <strong>{{ user?.name }}</strong>
+                <small>{{ user?.email }}</small>
+              </div>
+            </div>
+            <hr>
+            <div class="btn-row">
+              <button class="dropdown-btn" (click)="goToProfile()">
+                Profile Settings
+              </button>
+              <button class="btn-logout" (click)="logout()">
+                Logout
+              </button>
+            </div>
+          </div>
+
+          <div class="mobile-profile" *ngIf="user">
+
+            <strong>{{ user.name }}</strong>
+            <small>{{ user.email }}</small>
+
+            <button class="mobile-link" (click)="goToProfile()">
+              Profile Settings
+            </button>
+
+            <button class="mobile-link logout" (click)="logout()">
+              Logout
+            </button>
+          </div>
         </li>
+
 
       </ng-template>
 

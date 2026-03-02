@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-navbar',
@@ -10,11 +11,37 @@ import { Router } from '@angular/router';
 export class NavbarComponent {
 
   menuOpen = false;
+  profileMenuOpen = false;
+  user: any;
 
   constructor(
     private router: Router,
-    private authService: AuthService   
-  ) {}
+    private authService: AuthService
+  ) { }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const clickedInside = (event.target as HTMLElement)
+      .closest('.profile-wrapper');
+
+    if (!clickedInside) {
+      this.profileMenuOpen = false;
+    }
+  }
+
+  ngOnInit() {
+
+    this.authService.user$.subscribe(user => {
+      this.user = user;
+    });
+
+    // Load once if empty
+    if (!this.authService.getCurrentUser()) {
+      this.authService.getProfile().subscribe((data: any) => {
+        this.authService.setUser(data);
+      });
+    }
+  }
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
@@ -34,7 +61,19 @@ export class NavbarComponent {
   }
 
   logout() {
-  this.authService.logout();   
-  this.router.navigate(['/login']);
-}
+    this.authService.logout();
+    this.menuOpen = false;
+    this.router.navigate(['/login']);
+  }
+
+  toggleProfileMenu() {
+    if (window.innerWidth < 768) return;
+    this.profileMenuOpen = !this.profileMenuOpen;
+  }
+
+  goToProfile() {
+    this.profileMenuOpen = false;
+    this.menuOpen = false;
+    this.router.navigate(['/profile']);
+  }
 }
